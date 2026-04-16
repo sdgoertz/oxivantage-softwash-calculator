@@ -11,6 +11,7 @@ st.markdown("""
     .tagline {font-size: 18px; color: #0F172A; font-style: italic;}
     .metric-positive {color: #16a34a !important;}
     .metric-negative {color: #dc2626 !important;}
+    section[data-testid="stSidebar"] {overflow: hidden;}
     </style>
 """, unsafe_allow_html=True)
 
@@ -20,7 +21,7 @@ if os.path.exists(logo_path):
 
 st.markdown('<h1 class="main-header">IG Chemical Solutions</h1>', unsafe_allow_html=True)
 st.markdown('<p class="tagline">OxiVantage LF™ • Soft Wash Bleach Savings Calculator</p>', unsafe_allow_html=True)
-st.caption("Reduces bleach (NaOCl) consumption by up to 50% (top-end) • 2000 ppm dosing per TDS • Job-size focused for roof & house washing")
+st.caption("Reduces bleach (NaOCl) consumption by up to 50% (top-end) • 2000 ppm dosing per TDS")
 
 # ====================== INPUTS ======================
 with st.sidebar:
@@ -69,17 +70,17 @@ break_even = (baseline_chem_cost - with_conc_vol * bleach_price_per_gal) / addit
 # ====================== DISPLAY ======================
 col1, col2, col3 = st.columns(3)
 with col1:
-    st.metric("Bleach used per job (baseline)", f"{baseline_conc_vol:.1f} gal")
+    st.metric("Bleach Used (no additive)", f"{baseline_conc_vol:.1f} gal")
 with col2:
-    st.metric("Bleach used per job (with OxiVantage)", f"{with_conc_vol:.1f} gal",
-              delta=f"-{baseline_conc_vol - with_conc_vol:.1f} gal")
+    st.metric("Bleach Used (with OxiVantage)", f"{with_conc_vol:.1f} gal",
+              delta=f"-{baseline_conc_vol - with_conc_vol:.1f} gal", delta_color="inverse")
 with col3:
     st.metric("Net Savings per Job", f"${savings:.0f}", delta_color="normal" if savings >= 0 else "inverse")
 
 st.divider()
 st.subheader("📊 Job Summary")
 df = pd.DataFrame({
-    "Metric": ["Job size", "Total mix volume", "Baseline bleach cost", "New chemical cost", "Net savings per job",
+    "Metric": ["Job size", "Total mix volume", "Bleach cost (no additive)", "Total chemical cost (with OxiVantage)", "Net savings",
                "Bleach saved", "Break-even OxiVantage price (per lb)"],
     "Value": [f"{job_size:,.0f} sq ft", f"{total_mix_vol:.1f} gal", f"${baseline_chem_cost:.0f}",
               f"${with_chem_cost:.0f}", f"${savings:.0f}", f"{baseline_conc_vol - with_conc_vol:.1f} gal",
