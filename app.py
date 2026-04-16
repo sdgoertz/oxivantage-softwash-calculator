@@ -1,8 +1,5 @@
 import streamlit as st
 import pandas as pd
-import io
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
 import os
 
 st.set_page_config(page_title="Soft Wash OxiVantage LF™ Savings Calculator", layout="wide", page_icon="🧪")
@@ -91,32 +88,3 @@ df = pd.DataFrame({
 st.dataframe(df, use_container_width=True, hide_index=True)
 
 st.info("**Dosing per TDS:** OxiVantage LF™ = 2000 ppm (0.20%) in final working solution. 50% reduction is the absolute maximum — 30% is more typical.")
-
-# PDF & CSV
-csv = df.to_csv(index=False).encode()
-st.download_button("📥 Download CSV", csv, "SoftWash_OxiVantage_Savings.csv", "text/csv")
-
-
-def create_pdf():
-    buffer = io.BytesIO()
-    c = canvas.Canvas(buffer, pagesize=letter)
-    if os.path.exists(logo_path):
-        try:
-            c.drawImage(logo_path, 50, 700, width=220, height=70, preserveAspectRatio=True)
-        except Exception:
-            pass
-    c.setFont("Helvetica-Bold", 20)
-    c.drawString(300, 750, "Soft Wash OxiVantage LF™ Savings Report")
-    y = 680
-    for _, row in df.iterrows():
-        c.drawString(50, y, f"{row['Metric']}: {row['Value']}")
-        y -= 25
-    c.save()
-    buffer.seek(0)
-    return buffer
-
-
-pdf_bytes = create_pdf()
-st.download_button("📄 Save PDF Report (with logo)", pdf_bytes, "SoftWash_OxiVantage_Report.pdf", "application/pdf")
-
-st.caption("✅ Quick & lean for soft wash • Job-size focused • Bleach reduction 25–50% per TDS (50% = top end)")
