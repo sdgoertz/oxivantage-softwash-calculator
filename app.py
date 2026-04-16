@@ -50,7 +50,7 @@ with st.sidebar:
     reduction_pct = st.slider("Bleach reduction % (25–50% per TDS)", 25, 50, 38, step=1,
                               help="25–50% is the effective range per TDS; 50% is top-end success")
 
-    additive_price = st.number_input(f"Quoted OxiVantage LF™ price per {vol_unit}", value=40.00, step=0.25)
+    additive_price = st.number_input(f"Quoted OxiVantage LF™ price per {mass_unit}", value=5.30, step=0.05)
 
     st.subheader("Pricing")
     bleach_price_per_gal = st.number_input(f"Bleach price per {vol_unit} of concentrate", value=3.50, step=0.10,
@@ -65,17 +65,17 @@ density = 8.34 if is_imperial else 1.0  # lb/gal or kg/L approx
 baseline_naocl_per_job = total_mix_vol * (final_naocl_pct / 100) * density   # lb or kg active
 with_naocl_per_job = baseline_naocl_per_job * (1 - reduction_pct / 100)
 
-additive_vol_per_job = total_mix_vol * 0.002   # 2000 ppm = 0.20% by volume
+additive_per_job = total_mix_vol * density * 0.002   # 2000 ppm = 0.20% by mass
 
 # Convert active to concentrate gallons/liters
 baseline_conc_vol = (baseline_naocl_per_job / density) / (bleach_concentrate_pct / 100)
 with_conc_vol = (with_naocl_per_job / density) / (bleach_concentrate_pct / 100)
 
 baseline_chem_cost = baseline_conc_vol * bleach_price_per_gal
-with_chem_cost = with_conc_vol * bleach_price_per_gal + (additive_vol_per_job * additive_price)
+with_chem_cost = with_conc_vol * bleach_price_per_gal + (additive_per_job * additive_price)
 
 savings = baseline_chem_cost - with_chem_cost
-break_even = (baseline_chem_cost - with_conc_vol * bleach_price_per_gal) / additive_vol_per_job if additive_vol_per_job > 0 else 0
+break_even = (baseline_chem_cost - with_conc_vol * bleach_price_per_gal) / additive_per_job if additive_per_job > 0 else 0
 
 # ====================== DISPLAY ======================
 col1, col2, col3 = st.columns(3)
@@ -91,7 +91,7 @@ st.divider()
 st.subheader("📊 Job Summary")
 df = pd.DataFrame({
     "Metric": ["Job size", "Final mix volume", "Baseline bleach cost", "New chemical cost", "Net savings per job",
-               "Bleach saved", f"Break-even OxiVantage price (per {vol_unit})"],
+               "Bleach saved", f"Break-even OxiVantage price (per {mass_unit})"],
     "Value": [f"{job_size:,.0f} {area_unit}", f"{total_mix_vol:.1f} {vol_unit}", f"${baseline_chem_cost:.0f}",
               f"${with_chem_cost:.0f}", f"${savings:.0f}", f"{baseline_conc_vol - with_conc_vol:.1f} {vol_unit}",
               f"${break_even:.2f}"]
