@@ -36,7 +36,7 @@ with st.sidebar:
         "Bleach reduction % (25–50% per TDS)", 25, 50, 38, step=1,
         help="25–50% is the effective range per TDS; 50% is top-end success"
     )
-    additive_price = st.number_input("Quoted OxiVantage LF™ price per lb", value=5.30, step=0.05)
+    additive_price = st.number_input("Quoted OxiVantage LF™ price per gal", value=44.00, step=0.25)
 
     st.subheader("Pricing")
     bleach_price_per_gal = st.number_input(
@@ -56,8 +56,8 @@ total_mix_vol = monthly_bleach_gal * (bleach_concentrate_pct / final_naocl_pct)
 with_bleach_gal = monthly_bleach_gal * (1 - reduction_pct / 100)
 bleach_saved = monthly_bleach_gal - with_bleach_gal
 
-# Additive: 2000 ppm by mass in total working solution
-additive_per_month = total_mix_vol * density * 0.002  # lb
+# Additive: 2000 ppm by volume in total working solution
+additive_per_month = total_mix_vol * 0.002  # gal
 
 # Costs
 baseline_cost = monthly_bleach_gal * bleach_price_per_gal
@@ -95,7 +95,7 @@ df = pd.DataFrame({
         "Bleach cost (no additive)",
         "Total chemical cost (with OxiVantage)",
         f"Net {period} savings",
-        "Break-even OxiVantage price (per lb)",
+        "Break-even OxiVantage price (per gal)",
     ],
     "Value": [
         f"{monthly_bleach_gal * multiplier:.1f} gal",
@@ -110,10 +110,10 @@ df = pd.DataFrame({
 st.dataframe(df, use_container_width=True, hide_index=True)
 
 st.info(
-    "**Dosing per TDS:** OxiVantage LF™ = 2000 ppm (0.20%) in final working solution. "
+    "**Dosing per TDS:** OxiVantage LF™ = 2000 ppm (0.20% by volume) in final working solution. "
     "50% bleach reduction is the absolute maximum — 30% is more typical.\n\n"
     "**Calculation assumptions:** Bleach concentrate is 12.5% NaOCl (standard industrial strength). "
-    "Additive volume is estimated using a 3% final spray concentration — a common soft wash dilution — "
-    "to derive total working solution from your monthly concentrate usage. "
-    "Actual additive consumption may vary slightly at higher or lower dilutions."
+    "Total working solution is estimated using a 3% final spray concentration — a common soft wash dilution. "
+    "OxiVantage LF™ additive volume is 0.20% of that total working solution. "
+    "Actual additive consumption may vary slightly at higher or lower spray dilutions."
 )
