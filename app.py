@@ -36,22 +36,21 @@ with st.sidebar:
 
     st.subheader("Job Details")
     job_size = st.number_input(f"Job size ({area_unit})", value=2000.0, min_value=500.0, step=100.0,
-                               help="Typical roof or house surface area")
+                               help="Total surface coverage area for the job — e.g. roof footprint, house siding, or combined surfaces being treated")
     mix_coverage = st.number_input(f"Mix coverage (gallons or L of final mix per 100 {area_unit})",
                                    value=2.0 if is_imperial else 7.57, step=0.1,
                                    help="Industry rule of thumb ≈ 1 gal mix per 50 sq ft roof (2 gal per 100 sq ft)")
 
-    bleach_concentrate_pct = st.number_input("Bleach concentrate strength (%)", value=12.5, min_value=5.0, step=0.5,
-                                             help="Most common industrial strength is 12.5%")
-    final_naocl_pct = st.number_input("Final active NaOCl % in spray mix", value=3.0, min_value=0.5, step=0.1,
-                                      help="Typical soft wash: 1–4% for roofs, 0.5–2.5% for house siding")
+    bleach_concentrate_pct = 12.5  # Standard industrial soft wash strength
+
+    final_naocl_pct = st.number_input("Final active NaOCl % in spray mix", value=3.0, min_value=0.5, max_value=6.0, step=0.1,
+                                      help="Typical ranges: 0.5–2% for house siding, 2–4% for concrete/stucco, 3–6% for roofs")
 
     st.subheader("OxiVantage LF™")
-    reduction_pct = st.slider("Bleach reduction % (0–50% max per TDS)", 0, 50, 30, step=1,
-                              help="30% is realistic; 50% is top-end success")
+    reduction_pct = st.slider("Bleach reduction % (25–50% per TDS)", 25, 50, 38, step=1,
+                              help="25–50% is the effective range per TDS; 50% is top-end success")
 
-    your_price_to_dist = st.number_input(f"Your price to distributor per {mass_unit}", value=2.15, step=0.01)
-    additive_price = st.number_input(f"Customer quoted price per {mass_unit}", value=2.50, step=0.01)
+    additive_price = st.number_input(f"Quoted OxiVantage LF™ price per {vol_unit}", value=18.00, step=0.25)
 
     st.subheader("Pricing")
     bleach_price_per_gal = st.number_input(f"Bleach price per {vol_unit} of concentrate", value=3.50, step=0.10,
@@ -66,17 +65,17 @@ density = 8.34 if is_imperial else 1.0  # lb/gal or kg/L approx
 baseline_naocl_per_job = total_mix_vol * (final_naocl_pct / 100) * density   # lb or kg active
 with_naocl_per_job = baseline_naocl_per_job * (1 - reduction_pct / 100)
 
-additive_per_job = total_mix_vol * density * 0.002   # 2000 ppm = 0.20%
+additive_vol_per_job = total_mix_vol * 0.002   # 2000 ppm = 0.20% by volume
 
 # Convert active to concentrate gallons/liters
 baseline_conc_vol = (baseline_naocl_per_job / density) / (bleach_concentrate_pct / 100)
 with_conc_vol = (with_naocl_per_job / density) / (bleach_concentrate_pct / 100)
 
 baseline_chem_cost = baseline_conc_vol * bleach_price_per_gal
-with_chem_cost = with_conc_vol * bleach_price_per_gal + (additive_per_job * additive_price)
+with_chem_cost = with_conc_vol * bleach_price_per_gal + (additive_vol_per_job * additive_price)
 
 savings = baseline_chem_cost - with_chem_cost
-break_even = (baseline_chem_cost - with_conc_vol * bleach_price_per_gal) / additive_per_job if additive_per_job > 0 else 0
+break_even = (baseline_chem_cost - with_conc_vol * bleach_price_per_gal) / additive_vol_per_job if additive_vol_per_job > 0 else 0
 
 # ====================== DISPLAY ======================
 col1, col2, col3 = st.columns(3)
@@ -92,7 +91,7 @@ st.divider()
 st.subheader("📊 Job Summary")
 df = pd.DataFrame({
     "Metric": ["Job size", "Final mix volume", "Baseline bleach cost", "New chemical cost", "Net savings per job",
-               "Bleach gallons/liters saved", "Break-even OxiVantage price"],
+               "Bleach saved", f"Break-even OxiVantage price (per {vol_unit})"],
     "Value": [f"{job_size:,.0f} {area_unit}", f"{total_mix_vol:.1f} {vol_unit}", f"${baseline_chem_cost:.0f}",
               f"${with_chem_cost:.0f}", f"${savings:.0f}", f"{baseline_conc_vol - with_conc_vol:.1f} {vol_unit}",
               f"${break_even:.2f}"]
@@ -128,4 +127,4 @@ def create_pdf():
 pdf_bytes = create_pdf()
 st.download_button("📄 Save PDF Report (with logo)", pdf_bytes, "SoftWash_OxiVantage_Report.pdf", "application/pdf")
 
-st.caption("✅ Quick & lean for soft wash • Job-size focused • Bleach reduction 0–50% (50% = top end)")
+st.caption("✅ Quick & lean for soft wash • Job-size focused • Bleach reduction 25–50% per TDS (50% = top end)")
