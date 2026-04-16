@@ -27,19 +27,12 @@ st.caption("Reduces bleach (NaOCl) consumption by up to 50% (top-end) • 2000 p
 
 # ====================== INPUTS ======================
 with st.sidebar:
-    st.header("📍 Job & Units")
-    units = st.radio("Units", ["Imperial (gal, lb, sq ft, USD)", "Metric (L, kg, m², USD)"], horizontal=True)
-    is_imperial = units.startswith("Imperial")
-    vol_unit = "gal" if is_imperial else "L"
-    area_unit = "sq ft" if is_imperial else "m²"
-    mass_unit = "lb" if is_imperial else "kg"
+    st.header("📍 Job Details")
 
-    st.subheader("Job Details")
-    job_size = st.number_input(f"Job size ({area_unit})", value=2000.0, min_value=500.0, step=100.0,
+    job_size = st.number_input("Job size (sq ft)", value=2000.0, min_value=500.0, step=100.0,
                                help="Total surface coverage area for the job — e.g. roof footprint, house siding, or combined surfaces being treated")
-    mix_coverage = st.number_input(f"Mix coverage (gallons or L of final mix per 100 {area_unit})",
-                                   value=2.0 if is_imperial else 7.57, step=0.1,
-                                   help="Industry rule of thumb ≈ 1 gal mix per 50 sq ft roof (2 gal per 100 sq ft)")
+    app_rate = st.number_input("Application rate (gal of mix per 100 sq ft)", value=2.0, min_value=0.1, step=0.1,
+                               help="How many gallons of final spray mix you apply per 100 sq ft. Typical: 1–2 gal/100 sq ft for roofs, 2–3 gal/100 sq ft for siding")
 
     bleach_concentrate_pct = 12.5  # Standard industrial soft wash strength
 
@@ -50,24 +43,23 @@ with st.sidebar:
     reduction_pct = st.slider("Bleach reduction % (25–50% per TDS)", 25, 50, 38, step=1,
                               help="25–50% is the effective range per TDS; 50% is top-end success")
 
-    additive_price = st.number_input(f"Quoted OxiVantage LF™ price per {mass_unit}", value=5.30, step=0.05)
+    additive_price = st.number_input("Quoted OxiVantage LF™ price per lb", value=5.30, step=0.05)
 
     st.subheader("Pricing")
-    bleach_price_per_gal = st.number_input(f"Bleach price per {vol_unit} of concentrate", value=3.50, step=0.10,
+    bleach_price_per_gal = st.number_input("Bleach price per gal of concentrate", value=3.50, step=0.10,
                                            help="Typical 12.5% delivered price")
 
 # ====================== CALCULATIONS ======================
-mix_per_100 = mix_coverage
-total_mix_vol = (job_size / 100) * mix_per_100
+total_mix_vol = (job_size / 100) * app_rate  # gallons
 
-density = 8.34 if is_imperial else 1.0  # lb/gal or kg/L approx
+density = 8.34  # lb/gal
 
-baseline_naocl_per_job = total_mix_vol * (final_naocl_pct / 100) * density   # lb or kg active
+baseline_naocl_per_job = total_mix_vol * (final_naocl_pct / 100) * density  # lb active
 with_naocl_per_job = baseline_naocl_per_job * (1 - reduction_pct / 100)
 
-additive_per_job = total_mix_vol * density * 0.002   # 2000 ppm = 0.20% by mass
+additive_per_job = total_mix_vol * density * 0.002  # 2000 ppm = 0.20% by mass, lb
 
-# Convert active to concentrate gallons/liters
+# Convert active lb to concentrate gallons
 baseline_conc_vol = (baseline_naocl_per_job / density) / (bleach_concentrate_pct / 100)
 with_conc_vol = (with_naocl_per_job / density) / (bleach_concentrate_pct / 100)
 
@@ -80,20 +72,20 @@ break_even = (baseline_chem_cost - with_conc_vol * bleach_price_per_gal) / addit
 # ====================== DISPLAY ======================
 col1, col2, col3 = st.columns(3)
 with col1:
-    st.metric("Bleach used per job (baseline)", f"{baseline_conc_vol:.1f} {vol_unit}")
+    st.metric("Bleach used per job (baseline)", f"{baseline_conc_vol:.1f} gal")
 with col2:
-    st.metric("Bleach used per job (with OxiVantage)", f"{with_conc_vol:.1f} {vol_unit}",
-              delta=f"-{baseline_conc_vol - with_conc_vol:.1f} {vol_unit}")
+    st.metric("Bleach used per job (with OxiVantage)", f"{with_conc_vol:.1f} gal",
+              delta=f"-{baseline_conc_vol - with_conc_vol:.1f} gal")
 with col3:
     st.metric("Net Savings per Job", f"${savings:.0f}", delta_color="normal" if savings >= 0 else "inverse")
 
 st.divider()
 st.subheader("📊 Job Summary")
 df = pd.DataFrame({
-    "Metric": ["Job size", "Final mix volume", "Baseline bleach cost", "New chemical cost", "Net savings per job",
-               "Bleach saved", f"Break-even OxiVantage price (per {mass_unit})"],
-    "Value": [f"{job_size:,.0f} {area_unit}", f"{total_mix_vol:.1f} {vol_unit}", f"${baseline_chem_cost:.0f}",
-              f"${with_chem_cost:.0f}", f"${savings:.0f}", f"{baseline_conc_vol - with_conc_vol:.1f} {vol_unit}",
+    "Metric": ["Job size", "Total mix volume", "Baseline bleach cost", "New chemical cost", "Net savings per job",
+               "Bleach saved", "Break-even OxiVantage price (per lb)"],
+    "Value": [f"{job_size:,.0f} sq ft", f"{total_mix_vol:.1f} gal", f"${baseline_chem_cost:.0f}",
+              f"${with_chem_cost:.0f}", f"${savings:.0f}", f"{baseline_conc_vol - with_conc_vol:.1f} gal",
               f"${break_even:.2f}"]
 })
 st.dataframe(df, use_container_width=True, hide_index=True)
