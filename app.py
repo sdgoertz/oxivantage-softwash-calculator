@@ -31,12 +31,6 @@ with st.sidebar:
         help="How many gallons of 12.5% bleach concentrate your operation goes through in a typical month"
     )
 
-    final_naocl_pct = st.number_input(
-        "Final NaOCl % in spray mix",
-        value=3.0, min_value=0.5, max_value=6.0, step=0.1,
-        help="Typical ranges: 0.5–2% for house siding, 2–4% for concrete/stucco, 3–6% for roofs"
-    )
-
     st.subheader("OxiVantage LF™")
     reduction_pct = st.slider(
         "Bleach reduction % (25–50% per TDS)", 25, 50, 38, step=1,
@@ -52,9 +46,10 @@ with st.sidebar:
 
 # ====================== CALCULATIONS ======================
 bleach_concentrate_pct = 12.5
+final_naocl_pct = 3.0  # assumed typical soft wash spray concentration
 density = 8.34  # lb/gal
 
-# Total working solution volume per month derived from concentrate usage and dilution ratio
+# Total working solution volume derived from concentrate usage and assumed dilution ratio
 total_mix_vol = monthly_bleach_gal * (bleach_concentrate_pct / final_naocl_pct)
 
 # Bleach volumes
@@ -114,4 +109,11 @@ df = pd.DataFrame({
 })
 st.dataframe(df, use_container_width=True, hide_index=True)
 
-st.info("**Dosing per TDS:** OxiVantage LF™ = 2000 ppm (0.20%) in final working solution. 50% reduction is the absolute maximum — 30% is more typical.")
+st.info(
+    "**Dosing per TDS:** OxiVantage LF™ = 2000 ppm (0.20%) in final working solution. "
+    "50% bleach reduction is the absolute maximum — 30% is more typical.\n\n"
+    "**Calculation assumptions:** Bleach concentrate is 12.5% NaOCl (standard industrial strength). "
+    "Additive volume is estimated using a 3% final spray concentration — a common soft wash dilution — "
+    "to derive total working solution from your monthly concentrate usage. "
+    "Actual additive consumption may vary slightly at higher or lower dilutions."
+)
