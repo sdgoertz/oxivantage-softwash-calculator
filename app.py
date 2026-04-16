@@ -50,7 +50,7 @@ with st.sidebar:
     reduction_pct = st.slider("Bleach reduction % (25–50% per TDS)", 25, 50, 38, step=1,
                               help="25–50% is the effective range per TDS; 50% is top-end success")
 
-    additive_price = st.number_input(f"Quoted OxiVantage LF™ price per {vol_unit}", value=18.00, step=0.25)
+    additive_price = st.number_input(f"Quoted OxiVantage LF™ price per {vol_unit}", value=40.00, step=0.25)
 
     st.subheader("Pricing")
     bleach_price_per_gal = st.number_input(f"Bleach price per {vol_unit} of concentrate", value=3.50, step=0.10,
