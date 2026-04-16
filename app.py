@@ -72,22 +72,26 @@ savings = baseline_cost - with_cost
 break_even = (baseline_cost - with_bleach_gal * bleach_price_per_gal) / additive_per_month if additive_per_month > 0 else 0
 
 # ====================== DISPLAY ======================
-view = st.radio("View", ["Monthly", "Annual"], horizontal=True)
-multiplier = 12 if view == "Annual" else 1
-period = "Annual" if view == "Annual" else "Monthly"
-
 col1, col2, col3 = st.columns(3)
 with col1:
-    st.metric(f"Bleach Used (no additive)", f"{monthly_bleach_gal * multiplier:.1f} gal")
+    st.metric("Bleach Used (no additive)", f"{monthly_bleach_gal:.1f} gal / mo")
 with col2:
-    st.metric(f"Bleach Used (with OxiVantage)", f"{with_bleach_gal * multiplier:.1f} gal",
-              delta=f"-{bleach_saved * multiplier:.1f} gal", delta_color="inverse")
+    st.metric("Bleach Used (with OxiVantage)", f"{with_bleach_gal:.1f} gal / mo",
+              delta=f"-{bleach_saved:.1f} gal", delta_color="inverse")
 with col3:
-    st.metric(f"Net {period} Savings", f"${savings * multiplier:.0f}",
+    st.metric("Net Monthly Savings", f"${savings:.0f}",
               delta_color="normal" if savings >= 0 else "inverse")
 
 st.divider()
-st.subheader(f"📊 {period} Summary")
+summary_header, toggle_col = st.columns([3, 1])
+with summary_header:
+    st.subheader("📊 Summary")
+with toggle_col:
+    view = st.radio("", ["Monthly", "Annual"], horizontal=True)
+
+multiplier = 12 if view == "Annual" else 1
+period = view.lower()
+
 df = pd.DataFrame({
     "Metric": [
         "Bleach used (no additive)",
@@ -95,7 +99,7 @@ df = pd.DataFrame({
         "Bleach saved",
         "Bleach cost (no additive)",
         "Total chemical cost (with OxiVantage)",
-        f"Net {period.lower()} savings",
+        f"Net {period} savings",
         "Break-even OxiVantage price (per lb)",
     ],
     "Value": [
